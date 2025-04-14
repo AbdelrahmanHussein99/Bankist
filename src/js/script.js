@@ -185,8 +185,31 @@ const updataUI = function (account) {
 
   calcDisplaySummary(account);
 };
+const logout = function () {
+  labelWelcome.textContent = `Log in to get started`;
+
+  containerApp.classList.remove("opacity-100");
+  containerApp.classList.add("opacity-0");
+};
+const startLogoutTimer = function () {
+  let time = 120;
+  const tick = function () {
+    const min = `${Math.trunc(time / 60)}`.padStart(2, 0);
+    const sec = `${time % 60}`.padStart(2, 0);
+    labelTimer.textContent = `${min}:${sec}`;
+    time--;
+    if (time === 0) {
+      logout();
+      clearInterval(timer);
+    }
+  };
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer;
+};
+
 // console.log(inputLoginUsername);
-let currentAccount;
+let currentAccount, timer;
 
 btnLogin.addEventListener("click", function (e) {
   e.preventDefault();
@@ -221,6 +244,9 @@ btnLogin.addEventListener("click", function (e) {
     inputLoginUsername.blur();
 
     updataUI(currentAccount);
+
+    if (timer) clearInterval(timer);
+    timer = startLogoutTimer();
   }
 });
 
@@ -246,6 +272,8 @@ btnTransfer.addEventListener("click", function (e) {
     updataUI(currentAccount);
   }
   inputTransferAmount.value = inputTransferTo.value = "";
+  clearInterval(timer);
+  timer = startLogoutTimer();
 });
 
 btnLoan.addEventListener("click", function (e) {
@@ -255,9 +283,13 @@ btnLoan.addEventListener("click", function (e) {
     loanAmount > 0 &&
     currentAccount.movements.some((mov) => mov >= loanAmount * 0.1)
   ) {
-    currentAccount.movements.push(loanAmount);
-    currentAccount.movementsDates.push(new Date().toISOString());
-    updataUI(currentAccount);
+    setTimeout(function () {
+      currentAccount.movements.push(loanAmount);
+      currentAccount.movementsDates.push(new Date().toISOString());
+      updataUI(currentAccount);
+      clearInterval(timer);
+      timer = startLogoutTimer();
+    }, 2500);
   }
   inputLoanAmount.value = "";
 });
@@ -274,11 +306,7 @@ btnClose.addEventListener("click", function (e) {
       (acc) => acc.userName === closeUserName
     );
     accounts.splice(closeIndexAcc, 1);
-    console.log(accounts, closeIndexAcc);
-    labelWelcome.textContent = `Log in to get started`;
-
-    containerApp.classList.remove("opacity-100");
-    containerApp.classList.add("opacity-0");
+    logout();
   }
   inputCloseUsername.value = inputClosePin.value = "";
 });
@@ -290,3 +318,11 @@ btnSort.addEventListener("click", function (e) {
 });
 
 console.log(new Date().toISOString());
+
+setInterval(function () {
+  const now = new Date();
+  const hour = now.getHours();
+  const min = now.getMinutes();
+  const sec = now.getSeconds();
+  console.log(`${hour} : ${min} : ${sec}`);
+}, 1000);
